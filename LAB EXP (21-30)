@@ -1,0 +1,310 @@
+21 .
+#include <stdio.h>
+#include <string.h>
+
+#define BLOCK 8
+
+void xorBlock(char a[], char b[], char out[])
+{
+    for(int i=0;i<BLOCK;i++)
+        out[i]=(a[i]==b[i])?'0':'1';
+    out[BLOCK]='\0';
+}
+
+int main()
+{
+    char plaintext[100];
+
+    printf("Enter binary plaintext: ");
+    scanf("%s",plaintext);
+
+    int len=strlen(plaintext);
+
+    // Padding (1 followed by 0's)
+    plaintext[len]='1';
+    len++;
+
+    while(len%BLOCK!=0)
+    {
+        plaintext[len]='0';
+        len++;
+    }
+
+    plaintext[len]='\0';
+
+    printf("\nPadded Plaintext : %s\n",plaintext);
+
+    printf("\nECB Mode:\n");
+    for(int i=0;i<len;i+=BLOCK)
+    {
+        printf("Block %d : ",i/BLOCK+1);
+        for(int j=0;j<BLOCK;j++)
+            printf("%c",plaintext[i+j]);
+        printf("\n");
+    }
+
+    printf("\nCBC and CFB modes use XOR with previous ciphertext/IV before encryption.\n");
+
+    return 0;
+}
+
+
+22) 
+#include <stdio.h>
+
+int encrypt(int p,int key)
+{
+    return (p+key)%256;
+}
+
+int decrypt(int c,int key)
+{
+    return (c-key+256)%256;
+}
+
+int main()
+{
+    int plaintext[4]={1,2,3,4};
+    int cipher[4];
+    int recover[4];
+
+    int key=7;
+    int iv=170;
+
+    int prev=iv;
+
+    printf("Encryption:\n");
+
+    for(int i=0;i<4;i++)
+    {
+        cipher[i]=encrypt(plaintext[i]^prev,key);
+        prev=cipher[i];
+        printf("%d ",cipher[i]);
+    }
+
+    prev=iv;
+
+    printf("\nDecryption:\n");
+
+    for(int i=0;i<4;i++)
+    {
+        recover[i]=decrypt(cipher[i],key)^prev;
+        prev=cipher[i];
+        printf("%d ",recover[i]);
+    }
+
+    return 0;
+}
+
+23 )
+#include <stdio.h>
+
+int encrypt(int p,int key)
+{
+    return (p+key)%256;
+}
+
+int main()
+{
+    int plaintext[3]={1,2,4};
+    int key=7;
+    int counter=0;
+
+    printf("Ciphertext:\n");
+
+    for(int i=0;i<3;i++)
+    {
+        int keystream=encrypt(counter,key);
+        int cipher=plaintext[i]^keystream;
+
+        printf("%d ",cipher);
+
+        counter++;
+    }
+
+    return 0;
+}
+
+24) 
+
+#include <stdio.h>
+
+int gcdExtended(int a,int b,int *x,int *y)
+{
+    if(a==0)
+    {
+        *x=0;
+        *y=1;
+        return b;
+    }
+
+    int x1,y1;
+
+    int gcd=gcdExtended(b%a,a,&x1,&y1);
+
+    *x=y1-(b/a)*x1;
+    *y=x1;
+
+    return gcd;
+}
+
+int main()
+{
+    int e=31;
+    int phi=3480;
+
+    int x,y;
+
+    gcdExtended(e,phi,&x,&y);
+
+    int d=(x%phi+phi)%phi;
+
+    printf("Private Key d = %d\n",d);
+
+    return 0;
+}
+
+25)
+
+#include <stdio.h>
+
+int gcd(int a,int b)
+{
+    while(b)
+    {
+        int t=a%b;
+        a=b;
+        b=t;
+    }
+    return a;
+}
+
+int main()
+{
+    int n=3599;
+    int plaintext=61;
+
+    int factor=gcd(plaintext,n);
+
+    printf("Common Factor = %d\n",factor);
+
+    return 0;
+}
+
+26)
+
+#include <stdio.h>
+
+int main()
+{
+    printf("Changing only e and d is NOT secure.\n");
+    printf("A leaked private key reveals phi(n).\n");
+    printf("Therefore new modulus must also be generated.\n");
+
+    return 0;
+}
+
+
+27)
+
+#include <stdio.h>
+
+int main()
+{
+    printf("Encrypting each letter independently is insecure.\n");
+    printf("Dictionary attack can recover every letter.\n");
+
+    return 0;
+}
+
+28)
+
+#include <stdio.h>
+#include <math.h>
+
+int power(int a,int b,int mod)
+{
+    int result=1;
+
+    while(b>0)
+    {
+        result=(result*a)%mod;
+        b--;
+    }
+
+    return result;
+}
+
+int main()
+{
+    int q=23;
+    int a=5;
+
+    int x=6;
+    int y=15;
+
+    int A=power(a,x,q);
+    int B=power(a,y,q);
+
+    int key1=power(B,x,q);
+    int key2=power(A,y,q);
+
+    printf("Shared Key=%d\n",key1);
+
+    return 0;
+}
+
+29)
+
+#include <stdio.h>
+
+int main()
+{
+    int rate=1024;
+    int width=1600;
+
+    int capacity=width-rate;
+
+    printf("Capacity = %d bits\n",capacity);
+
+    printf("Lane Size = 64 bits\n");
+
+    printf("Capacity Lanes = %d\n",capacity/64);
+
+    return 0;
+}
+
+29)
+#include <stdio.h>
+
+int main()
+{
+    int rate=1024;
+    int width=1600;
+
+    int capacity=width-rate;
+
+    printf("Capacity = %d bits\n",capacity);
+
+    printf("Lane Size = 64 bits\n");
+
+    printf("Capacity Lanes = %d\n",capacity/64);
+
+    return 0;
+}
+
+30)
+#include <stdio.h>
+
+int main()
+{
+    printf("CBC-MAC forgery demonstration\n");
+
+    printf("Known MAC = T\n");
+
+    printf("Forged message = X || (X XOR T)\n");
+
+    printf("Resulting MAC remains T.\n");
+
+    return 0;
+}
