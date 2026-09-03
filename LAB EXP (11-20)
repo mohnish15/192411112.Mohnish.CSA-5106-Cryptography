@@ -1,0 +1,533 @@
+11 ) 
+#include <stdio.h>
+
+int main()
+{
+    printf("Playfair Cipher Key Space\n\n");
+
+    printf("Ignoring equivalent keys:\n");
+    printf("Possible keys = 25!\n");
+    printf("Approximate key size = 2^84\n\n");
+
+    printf("Considering equivalent keys:\n");
+    printf("Effective keys = 25! / (5! * 5!)\n");
+    printf("Approximate key size = 2^70\n");
+
+    return 0;
+}
+
+
+12)
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int modInverse(int a, int m)
+{
+    a = a % m;
+    for (int x = 1; x < m; x++)
+        if ((a * x) % m == 1)
+            return x;
+    return -1;
+}
+
+void encrypt(char text[])
+{
+    int key[2][2] = {{9,4},{5,7}};
+    int len = strlen(text);
+
+    if(len % 2 != 0)
+    {
+        text[len] = 'x';
+        text[len+1] = '\0';
+        len++;
+    }
+
+    printf("\nCiphertext : ");
+
+    for(int i=0;i<len;i+=2)
+    {
+        int a = text[i]-'a';
+        int b = text[i+1]-'a';
+
+        int c1 = (key[0][0]*a + key[0][1]*b)%26;
+        int c2 = (key[1][0]*a + key[1][1]*b)%26;
+
+        printf("%c%c", c1+'A', c2+'A');
+    }
+}
+
+void decrypt(char text[])
+{
+    int key[2][2]={{9,4},{5,7}};
+
+    int det = (key[0][0]*key[1][1]-key[0][1]*key[1][0])%26;
+    if(det<0) det+=26;
+
+    int invDet = modInverse(det,26);
+
+    int inv[2][2];
+
+    inv[0][0]=( key[1][1]*invDet)%26;
+    inv[0][1]=((-key[0][1]+26)*invDet)%26;
+    inv[1][0]=((-key[1][0]+26)*invDet)%26;
+    inv[1][1]=( key[0][0]*invDet)%26;
+
+    int len=strlen(text);
+
+    printf("\nRecovered Plaintext : ");
+
+    for(int i=0;i<len;i+=2)
+    {
+        int a=toupper(text[i])-'A';
+        int b=toupper(text[i+1])-'A';
+
+        int p1=(inv[0][0]*a+inv[0][1]*b)%26;
+        int p2=(inv[1][0]*a+inv[1][1]*b)%26;
+
+        printf("%c%c",p1+'a',p2+'a');
+    }
+}
+
+int main()
+{
+    char plain[200];
+
+    printf("Enter plaintext (lowercase without spaces): ");
+    scanf("%s",plain);
+
+    encrypt(plain);
+
+    char cipher[200];
+    printf("\n\nEnter ciphertext to decrypt: ");
+    scanf("%s",cipher);
+
+    decrypt(cipher);
+
+    return 0;
+}
+
+
+13)
+#include <stdio.h>
+
+int modInverse(int a, int m)
+{
+    a = (a % m + m) % m;
+    for (int x = 1; x < m; x++)
+    {
+        if ((a * x) % m == 1)
+            return x;
+    }
+    return -1;
+}
+
+int main()
+{
+    int P[2][2], C[2][2];
+    int Pinv[2][2], K[2][2];
+
+    printf("Enter Plaintext Matrix (2x2):\n");
+    for(int i=0;i<2;i++)
+        for(int j=0;j<2;j++)
+            scanf("%d",&P[i][j]);
+
+    printf("Enter Ciphertext Matrix (2x2):\n");
+    for(int i=0;i<2;i++)
+        for(int j=0;j<2;j++)
+            scanf("%d",&C[i][j]);
+
+    int det = P[0][0]*P[1][1] - P[0][1]*P[1][0];
+    det = (det % 26 + 26) % 26;
+
+    int invDet = modInverse(det,26);
+
+    if(invDet==-1)
+    {
+        printf("Plaintext matrix is not invertible.\n");
+        return 0;
+    }
+
+    Pinv[0][0] = ( P[1][1]*invDet)%26;
+    Pinv[0][1] = ((-P[0][1]+26)*invDet)%26;
+    Pinv[1][0] = ((-P[1][0]+26)*invDet)%26;
+    Pinv[1][1] = ( P[0][0]*invDet)%26;
+
+    for(int i=0;i<2;i++)
+    {
+        for(int j=0;j<2;j++)
+        {
+            K[i][j]=0;
+            for(int k=0;k<2;k++)
+                K[i][j]+=C[i][k]*Pinv[k][j];
+
+            K[i][j]%=26;
+        }
+    }
+
+    printf("\nRecovered Key Matrix:\n");
+
+    for(int i=0;i<2;i++)
+    {
+        for(int j=0;j<2;j++)
+            printf("%4d",K[i][j]);
+        printf("\n");
+    }
+
+    return 0;
+}
+
+14)
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main()
+{
+    char plain[100];
+    int key[100];
+    char cipher[100];
+    int i, len;
+
+    printf("Enter Plaintext (without spaces): ");
+    scanf("%s", plain);
+
+    len = strlen(plain);
+
+    printf("Enter %d key values:\n", len);
+
+    for(i=0;i<len;i++)
+        scanf("%d",&key[i]);
+
+    printf("\nCiphertext : ");
+
+    for(i=0;i<len;i++)
+    {
+        int p = toupper(plain[i])-'A';
+        int c = (p + key[i]) % 26;
+
+        cipher[i] = c + 'A';
+
+        printf("%c", cipher[i]);
+    }
+
+    cipher[len]='\0';
+
+    printf("\n");
+
+    printf("\nRecovered Plaintext : ");
+
+    for(i=0;i<len;i++)
+    {
+        int c = cipher[i]-'A';
+        int p = (c-key[i]+26)%26;
+
+        printf("%c",p+'A');
+    }
+
+    printf("\n");
+
+    return 0;
+}
+
+15)
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void decrypt(char cipher[], int key)
+{
+    int i;
+
+    printf("Key %2d : ", key);
+
+    for(i = 0; cipher[i] != '\0'; i++)
+    {
+        char ch = cipher[i];
+
+        if(isupper(ch))
+            printf("%c", ((ch - 'A' - key + 26) % 26) + 'A');
+        else if(islower(ch))
+            printf("%c", ((ch - 'a' - key + 26) % 26) + 'a');
+        else
+            printf("%c", ch);
+    }
+
+    printf("\n");
+}
+
+int main()
+{
+    char cipher[200];
+    int top, key;
+
+    printf("Enter Ciphertext : ");
+    fgets(cipher, sizeof(cipher), stdin);
+
+    printf("Enter number of possible plaintexts to display : ");
+    scanf("%d", &top);
+
+    if(top > 26)
+        top = 26;
+
+    printf("\nPossible Plaintexts:\n\n");
+
+    for(key = 0; key < top; key++)
+    {
+        decrypt(cipher, key);
+    }
+
+    return 0;
+}
+
+16)
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 26
+
+typedef struct
+{
+    char letter;
+    int freq;
+} LetterFreq;
+
+void sortFrequency(LetterFreq arr[])
+{
+    int i,j;
+    LetterFreq temp;
+
+    for(i=0;i<SIZE-1;i++)
+    {
+        for(j=i+1;j<SIZE;j++)
+        {
+            if(arr[j].freq > arr[i].freq)
+            {
+                temp=arr[i];
+                arr[i]=arr[j];
+                arr[j]=temp;
+            }
+        }
+    }
+}
+
+int main()
+{
+    char cipher[500];
+    int count[26]={0};
+    LetterFreq freq[26];
+    char english[]="ETAOINSHRDLCUMWFGYPBVKJXQZ";
+    char map[26];
+    int i;
+
+    printf("Enter Ciphertext:\n");
+    fgets(cipher,sizeof(cipher),stdin);
+
+    for(i=0;cipher[i]!='\0';i++)
+    {
+        if(isalpha(cipher[i]))
+        {
+            count[toupper(cipher[i])-'A']++;
+        }
+    }
+
+    for(i=0;i<26;i++)
+    {
+        freq[i].letter='A'+i;
+        freq[i].freq=count[i];
+    }
+
+    sortFrequency(freq);
+
+    for(i=0;i<26;i++)
+    {
+        map[freq[i].letter-'A']=english[i];
+    }
+
+    printf("\nEstimated Plaintext:\n\n");
+
+    for(i=0;cipher[i]!='\0';i++)
+    {
+        if(isalpha(cipher[i]))
+            printf("%c",map[toupper(cipher[i])-'A']);
+        else
+            printf("%c",cipher[i]);
+    }
+
+    printf("\n");
+
+    return 0;
+}
+
+
+17)
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    char key[16][49];
+    int i;
+
+    printf("Enter the 16 DES subkeys (48-bit binary strings):\n\n");
+
+    for(i = 0; i < 16; i++)
+    {
+        printf("K%d : ", i + 1);
+        scanf("%48s", key[i]);
+    }
+
+    printf("\nDES Decryption Key Order:\n\n");
+
+    for(i = 15; i >= 0; i--)
+    {
+        printf("Round %2d -> %s\n", 16 - i, key[i]);
+    }
+
+    return 0;
+}
+
+
+18)
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    char key56[57];
+    char left[29], right[29];
+    char subkey[49];
+    int i;
+
+    printf("Enter a 56-bit binary key:\n");
+    scanf("%56s", key56);
+
+    /* Split into two 28-bit halves */
+    strncpy(left, key56, 28);
+    left[28] = '\0';
+
+    strncpy(right, key56 + 28, 28);
+    right[28] = '\0';
+
+    /* First 24 bits from left half */
+    for(i = 0; i < 24; i++)
+        subkey[i] = left[i];
+
+    /* Next 24 bits from right half */
+    for(i = 0; i < 24; i++)
+        subkey[i + 24] = right[i];
+
+    subkey[48] = '\0';
+
+    printf("\nLeft Half (28 bits):\n%s\n", left);
+
+    printf("\nRight Half (28 bits):\n%s\n", right);
+
+    printf("\nFirst 24 bits from Left:\n");
+    for(i = 0; i < 24; i++)
+        printf("%c", left[i]);
+
+    printf("\n\nSecond 24 bits from Right:\n");
+    for(i = 0; i < 24; i++)
+        printf("%c", right[i]);
+
+    printf("\n\nGenerated 48-bit Subkey:\n%s\n", subkey);
+
+    return 0;
+}
+
+19)
+
+#include <stdio.h>
+#include <string.h>
+
+#define SIZE 8
+
+void xorBlock(char a[], char b[], char result[])
+{
+    for(int i = 0; i < SIZE; i++)
+        result[i] = a[i] ^ b[i];
+}
+
+int main()
+{
+    char plaintext[100];
+    char iv[SIZE + 1];
+    char previous[SIZE];
+    char block[SIZE];
+    char cipher[SIZE];
+
+    printf("Enter plaintext (multiple of 8 characters): ");
+    scanf("%s", plaintext);
+
+    printf("Enter 8-character IV: ");
+    scanf("%8s", iv);
+
+    memcpy(previous, iv, SIZE);
+
+    printf("\nCipher Blocks (CBC Demonstration):\n");
+
+    int len = strlen(plaintext);
+
+    for(int i = 0; i < len; i += SIZE)
+    {
+        memcpy(block, plaintext + i, SIZE);
+
+        xorBlock(block, previous, cipher);
+
+        printf("Block %d : ", (i / SIZE) + 1);
+
+        for(int j = 0; j < SIZE; j++)
+            printf("%02X ", (unsigned char)cipher[j]);
+
+        printf("\n");
+
+        memcpy(previous, cipher, SIZE);
+    }
+
+    return 0;
+}
+
+
+20)
+
+#include <stdio.h>
+
+int main()
+{
+    int blocks, errorBlock;
+
+    printf("Enter total number of plaintext blocks: ");
+    scanf("%d", &blocks);
+
+    printf("Enter ciphertext block containing transmission error: ");
+    scanf("%d", &errorBlock);
+
+    printf("\n===== ECB MODE =====\n");
+    printf("Affected Plaintext Block:\n");
+    printf("P%d only\n", errorBlock);
+
+    printf("\n===== CBC MODE =====\n");
+
+    if(errorBlock < blocks)
+    {
+        printf("Affected Plaintext Blocks:\n");
+        printf("P%d and P%d\n", errorBlock, errorBlock + 1);
+    }
+    else
+    {
+        printf("Affected Plaintext Block:\n");
+        printf("P%d only (last block)\n", errorBlock);
+    }
+
+    printf("\nExplanation:\n");
+    printf("ECB: Error affects only one plaintext block.\n");
+    printf("CBC: Error affects the current block and the next plaintext block.\n");
+
+    return 0;
+}
+
+
